@@ -10,8 +10,12 @@ Last Updated: Sep 12 2022
 
 
 
-#define LED_PIN 5
-#define LED_NUM 50
+#define LED_PIN 5          // пин ленты
+#define LED_NUM 20         // количество светодиодов
+#define COLON_SIZE 4       // высота матрицы
+#define COLON_AMOUNT 5     // ширина матрицы
+
+
 #include "FastLED.h"
 CRGB leds[LED_NUM];
 void setup() {
