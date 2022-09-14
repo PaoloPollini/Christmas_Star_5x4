@@ -1,10 +1,10 @@
 /*
 (c)saigon 2022  
 Written: Sep 12 2022.
-Last Updated: Sep 13 2022
+Last Updated: Sep 14 2022
 
 Звезда для новогодней елки на WS2812
-Пять лучей по 4 светодиода в каждом
+Пять лучей по 5 светодиодов в каждом
 
 */
 
@@ -30,7 +30,7 @@ void loop() {
 
 
 
-switch (0) {
+switch (1) {
   case 0:
 
 // ------------------------ Искры -----------------
@@ -39,7 +39,7 @@ switch (0) {
  FastLED.show();
  delay(200);        // Время паузы
  
- leds[random(LED_NUM)].setRGB(255, 255, 255);
+ leds[random(LED_NUM)].setRGB(255, 0, 0);
   FastLED.show();
   delay(25);        // Время вспышки
   
@@ -59,36 +59,20 @@ switch (0) {
   delay(25);        // скорость дыхания
 
     break;
-}
-
-}
-void sparkles() {
+  case 2:
   
-
-// ------------------------ Искры -----------------
-
- FastLED.clear();
- FastLED.show();
- delay(200);        // Время паузы
- 
- leds[random(LED_NUM)].setRGB(255, 255, 255);
-  FastLED.show();
-  delay(25);        // Время вспышки
-  
-}
-
-
-void breathe() {
-
-// ------------------------ Дыхание -----------------
+// ------------------------ Бегущие точки -----------------
   for (int i = 0; i < LED_NUM; i++) {
+  FastLED.clear();
+  FastLED.show();
     leds[i].setHue(255);
+    leds[LED_NUM - i - 1].setHue(255);
+  FastLED.show();
+  delay(30);        // время свечения точек
   }
 
-  FastLED.setBrightness(counter);
-  FastLED.show();
-    if (dir) counter++; // увеличиваем яркость
-    else counter--;     // уменьшаем
-    if (counter >= MAX_BRIGHTNESS || counter <= 0) dir = !dir; // разворачиваем
-  delay(25);        // скорость дыхания
+    break;
+    
+}
+
 }
