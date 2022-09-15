@@ -9,7 +9,7 @@ Last Updated: Sep 14 2022
 */
 
 #define LED_PIN 2            // пин ленты
-#define LED_NUM 20           // количество светодиодов
+#define LED_NUM 25           // количество светодиодов
 #define COLON_SIZE 4         // высота матрицы
 #define COLON_AMOUNT 5       // ширина матрицы
 #define MAX_BRIGHTNESS 50   // максимальная яркость ленты
@@ -30,7 +30,7 @@ void loop() {
 
 
 
-switch (1) {
+switch (0) {
   case 0:
 
 // ------------------------ Искры -----------------
@@ -39,6 +39,7 @@ switch (1) {
  FastLED.show();
  delay(200);        // Время паузы
  
+ leds[random(LED_NUM)].setRGB(255, 0, 0);
  leds[random(LED_NUM)].setRGB(255, 0, 0);
   FastLED.show();
   delay(25);        // Время вспышки
@@ -56,7 +57,8 @@ switch (1) {
     if (dir) counter++; // увеличиваем яркость
     else counter--;     // уменьшаем
     if (counter >= MAX_BRIGHTNESS || counter <= 0) dir = !dir; // разворачиваем
-  delay(25);        // скорость дыхания
+  if (counter >= 0 & counter <= MAX_BRIGHTNESS/3 ) delay(25);        // скорость дыхания
+  else   delay(10);
 
     break;
   case 2:
@@ -66,13 +68,12 @@ switch (1) {
   FastLED.clear();
   FastLED.show();
     leds[i].setHue(255);
-    leds[LED_NUM - i - 1].setHue(255);
+    leds[LED_NUM-i-1].setHue(255);
   FastLED.show();
-  delay(30);        // время свечения точек
+  delay(20);        // время свечения точек
   }
 
     break;
-    
 }
 
 }
