@@ -1,7 +1,7 @@
 /*
 (c)saigon 2022  
 Written: Sep 12 2022.
-Last Updated: Sep 14 2022
+Last Updated: Sep 17 2022
 
 Звезда для новогодней елки на WS2812
 Пять лучей по 5 светодиодов в каждом
@@ -16,33 +16,43 @@ Last Updated: Sep 14 2022
 
 #include "FastLED.h"
 CRGB leds[LED_NUM];
+unsigned long paletteTimer = 0;     // таймер показа эффектов
+int showPaletteInterval = 10;   // продолжительность показа выбранного эффекта (сек)
+byte currentPalette=0;          // текущая палитра
+byte counter;
+boolean dir=true; 
 
 
 void setup() {
   FastLED.addLeds<WS2812, LED_PIN, GRB>(leds, LED_NUM);
   FastLED.setBrightness(MAX_BRIGHTNESS);
   randomSeed(analogRead(0));
+
+paletteTimer = millis();
 }
 
-byte counter;
-boolean dir=true; 
 void loop() {
 
+if (millis() >= paletteTimer + showPaletteInterval * 1000) {
+ currentPalette++;
+ if (currentPalette >2) currentPalette = 0; 
+ paletteTimer = millis(); 
+}
 
-
-switch (0) {
+switch (currentPalette) {
   case 0:
 
 // ------------------------ Искры -----------------
 
  FastLED.clear();
+ FastLED.setBrightness(MAX_BRIGHTNESS);
  FastLED.show();
- delay(200);        // Время паузы
+ delay(100);        // Время паузы
  
  leds[random(LED_NUM)].setRGB(255, 0, 0);
  leds[random(LED_NUM)].setRGB(255, 0, 0);
   FastLED.show();
-  delay(25);        // Время вспышки
+  delay(15);        // Время вспышки
   
     break;
   case 1:
@@ -66,6 +76,7 @@ switch (0) {
 // ------------------------ Бегущие точки -----------------
   for (int i = 0; i < LED_NUM; i++) {
   FastLED.clear();
+  FastLED.setBrightness(MAX_BRIGHTNESS);
   FastLED.show();
     leds[i].setHue(255);
     leds[LED_NUM-i-1].setHue(255);
