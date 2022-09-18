@@ -1,7 +1,7 @@
 /*
 (c)saigon 2022  
 Written: Sep 12 2022.
-Last Updated: Sep 17 2022
+Last Updated: Sep 18 2022
 
 Звезда для новогодней елки на WS2812
 Пять лучей по 5 светодиодов в каждом
@@ -12,18 +12,34 @@ Last Updated: Sep 17 2022
 #define LED_NUM 25           // количество светодиодов
 #define COLON_SIZE 4         // высота матрицы
 #define COLON_AMOUNT 5       // ширина матрицы
-#define MAX_BRIGHTNESS 50   // максимальная яркость ленты
+#define MAX_BRIGHTNESS 50    // максимальная яркость ленты
 
 #include "FastLED.h"
 CRGB leds[LED_NUM];
-unsigned long paletteTimer = 0;     // таймер показа эффектов
+unsigned long paletteTimer = 0; // таймер показа эффектов
 int showPaletteInterval = 10;   // продолжительность показа выбранного эффекта (сек)
 byte currentPalette=0;          // текущая палитра
 byte counter;
 boolean dir=true; 
 
+// матрица 11х4
+byte glossMatrix[][4] = {
+  {7,12,12,12},
+  {8,11,11,11},
+  {6,9,10,13},
+  {5,14,14,14},
+  {4,15,15,15},
+  {3,16,16,16},
+  {2,17,17,17},
+  {0,1,18,19},
+  {20,24,24,24},
+  {21,23,23,23},
+  {22,22,22,22},
+};
+
 
 void setup() {
+  Serial.begin(9600);
   FastLED.addLeds<WS2812, LED_PIN, GRB>(leds, LED_NUM);
   FastLED.setBrightness(MAX_BRIGHTNESS);
   randomSeed(analogRead(0));
@@ -32,7 +48,7 @@ paletteTimer = millis();
 }
 
 void loop() {
-
+/*
 if (millis() >= paletteTimer + showPaletteInterval * 1000) {
  currentPalette++;
  if (currentPalette >2) currentPalette = 0; 
@@ -40,6 +56,9 @@ if (millis() >= paletteTimer + showPaletteInterval * 1000) {
 }
 
 switch (currentPalette) {
+*/
+
+switch (3) {  
   case 0:
 
 // ------------------------ Искры -----------------
@@ -66,8 +85,8 @@ switch (currentPalette) {
   FastLED.show();
     if (dir) counter++; // увеличиваем яркость
     else counter--;     // уменьшаем
-    if (counter >= MAX_BRIGHTNESS || counter <= 0) dir = !dir; // разворачиваем
-  if (counter >= 0 & counter <= MAX_BRIGHTNESS/3 ) delay(25);        // скорость дыхания
+    if (counter >= MAX_BRIGHTNESS || counter <= 0) dir = !dir;   // разворачиваем
+  if (counter >= 0 & counter <= MAX_BRIGHTNESS/3 ) delay(25);    // скорость дыхания
   else   delay(10);
 
     break;
@@ -84,6 +103,19 @@ switch (currentPalette) {
   delay(20);        // время свечения точек
   }
 
+    break;
+  case 3:
+  
+ // ------------------------ Блеск ----------------- 
+  FastLED.clear();
+  FastLED.setBrightness(MAX_BRIGHTNESS);
+  FastLED.show();
+
+  for (int i = 0;  i < 11; i++) {
+     Serial.println(glossMatrix[i][4]);
+    //leds[i].setHue(255);
+  }
+  
     break;
 }
 
