@@ -1,18 +1,19 @@
 /*
 (c)saigon 2022  
 Written: Sep 12 2022.
-Last Updated: Sep 19 2022
+Last Updated: Sep 20 2022
 
 Звезда для новогодней елки на WS2812
 Пять лучей по 5 светодиодов в каждом
 
 */
 
-#define LED_PIN 2            // пин ленты
-#define LED_NUM 25           // количество светодиодов
-#define COLON_SIZE 4         // высота матрицы
-#define COLON_AMOUNT 5       // ширина матрицы
-#define MAX_BRIGHTNESS 50    // максимальная яркость ленты
+#define LED_PIN 2               // пин ленты
+#define LED_NUM 25              // количество светодиодов
+#define COLON_SIZE 4            // высота матрицы
+#define COLON_AMOUNT 5          // ширина матрицы
+#define MIN_BRIGHTNESS 0        // минимальная яркость ленты. Если больше нуля, звезда не будет гаснуть полностью
+#define MAX_BRIGHTNESS 50       // максимальная яркость ленты
 
 #include "FastLED.h"
 CRGB leds[LED_NUM];
@@ -58,12 +59,11 @@ void setup() {
   FastLED.addLeds<WS2812, LED_PIN, GRB>(leds, LED_NUM);
   FastLED.setBrightness(MAX_BRIGHTNESS);
   randomSeed(analogRead(0));
-
-paletteTimer = millis();
+  paletteTimer = millis();
 }
 
 void loop() {
-
+/*
 if (millis() >= paletteTimer + showPaletteInterval * 1000) {
  currentPalette++;
  if (currentPalette >4) currentPalette = 0; 
@@ -71,43 +71,55 @@ if (millis() >= paletteTimer + showPaletteInterval * 1000) {
 }
 
 switch (currentPalette) {
+*/  
 
-
-//switch (4) {  
+switch (1) {  
   case 0:
+  sparks();
+    break;
+  case 1:
+  breathe();
+    break;
+  case 2:
+  runningDots();
+    break;
+  case 3:
+  gloss();
+    break;
+  case 4:  
+  heartBeat2();
+    break;
+}
+}
+// ----------- END LOOP --------------------
 
-// ------------------------ Искры -----------------
 
+// ======================= ЭФФЕКТЫ =========================
+
+void sparks(){      // ------------------------ Искры -----------------
  FastLED.clear();
- FastLED.setBrightness(MAX_BRIGHTNESS);
  FastLED.show();
  delay(100);        // Время паузы
  
- leds[random(LED_NUM)].setRGB(255, 0, 0);
- leds[random(LED_NUM)].setRGB(255, 0, 0);
+ leds[random(LED_NUM)].setHue(255);
+ leds[random(LED_NUM)].setHue(255);
   FastLED.show();
-  delay(15);        // Время вспышки
-  
-    break;
-  case 1:
-  
-// ------------------------ Дыхание -----------------
+  delay(25);        // Время вспышки
+}
+
+void breathe(){      // ------------------------ Дыхание -----------------
+int q;
+  for (int j = 30; j < 482; j++) {
+    if (j > 255) q=511-j; else q=j;
   for (int i = 0; i < LED_NUM; i++) {
-    leds[i].setHue(255);
+    leds[i].setHSV(255, 255, q);
   }
-
-  FastLED.setBrightness(counter);
   FastLED.show();
-    if (dir) counter++; // увеличиваем яркость
-    else counter--;     // уменьшаем
-    if (counter >= MAX_BRIGHTNESS || counter <= 0) dir = !dir;   // разворачиваем
-  if (counter >= 0 & counter <= MAX_BRIGHTNESS/3 ) delay(25);    // скорость дыхания
-  else   delay(10);
+  delay(5);
+}
+}
 
-    break;
-  case 2:
-  
-// ------------------------ Бегущие точки -----------------
+void runningDots(){    // ------------------------ Бегущие точки -----------------
   for (int i = 0; i < LED_NUM; i++) {
   FastLED.clear();
   FastLED.setBrightness(MAX_BRIGHTNESS);
@@ -117,14 +129,10 @@ switch (currentPalette) {
   FastLED.show();
   delay(30);        // время свечения точек
   }
+}
 
-    break;
-  case 3:
-  
- // ------------------------ Блеск ----------------- 
-
+void gloss(){      // ------------------------ Блеск ----------------- 
   for (int i = 0;  i < 11; i++) {
-
   FastLED.clear();
   FastLED.setBrightness(MAX_BRIGHTNESS);
   FastLED.show();
@@ -133,21 +141,16 @@ switch (currentPalette) {
 //     Serial.println(glossMatrix[i][j]);
 //    leds[glossMatrix[i][j]].setHue(255);
     leds[glossMatrix[10 - i][j]].setHue(255);
-
   }
   FastLED.show();
   delay(30);
  } 
- 
-    break;
-  case 4:  
-// ------------------------ Сердцебиение -----------------
+}
 
-
+void heartBeat(){      // ------------------------ Сердцебиение -----------------
   for (int i = 0; i < LED_NUM; i++) {
     leds[i].setHue(255);
   }
-
   FastLED.setBrightness(counter);
   FastLED.show();
     if (dir) counter++; // увеличиваем яркость
@@ -155,9 +158,14 @@ switch (currentPalette) {
     if (counter >= MAX_BRIGHTNESS || counter <= MAX_BRIGHTNESS/3) dir = !dir;   // разворачиваем
   if (counter >= MAX_BRIGHTNESS/3 & counter <= MAX_BRIGHTNESS - MAX_BRIGHTNESS/3*2 ) delay(50);    // скорость дыхания
   else   delay(15);
-    
-    break;
-
 }
 
+void heartBeat2(){      // ------------------------ Сердцебиение -----------------
+    for (int j = 0;  j < 25; j++) {
+  for (int i = 0; i < LED_NUM; i++) {
+    leds[i].setHSV(255, 255, (i-j+50) * 10);
+  }
+  FastLED.show();
+  delay(30);
+} 
 }
