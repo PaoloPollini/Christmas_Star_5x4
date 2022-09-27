@@ -1,22 +1,48 @@
 /*
 (c)saigon 2022  
 Written: Sep 12 2022.
-Last Updated: Sep 22 2022
+Last Updated: Sep 27 2022
 
 Звезда для новогодней елки на WS2812
 Пять лучей по 5 светодиодов в каждом
+Девять эффектов в двух группах, пять основных и четыре дополнительных
+Четыре режима включения эффектов:
+  0- по порядку из списка избранных эфектов
+  1- случайно из списка избранных эффектов
+  2- по порядку, чередуя основной эффект с дополнительным
+  3- в случайном порядке, чередуя основной эффект с дополнительным
+Время свечения основных и дополнителльных эффектов устанавливается отдельно
+Перечень эффектов:
+основные:
+  0 - Искры
+  1 - Дыхание
+  2 - Блеск
+  3 - Сердцебиение
+  4 - Свечение с искрами
+дополнительные:
+  5 - Бегущие точки
+  6 - Водопад
+  7 - Змейка
+  8 - Мигающие лучи
 */
 
-#define LED_PIN 2               // пин ленты
-#define LED_NUM 25              // количество светодиодов
-#define MAX_BRIGHTNESS 150      // максимальная яркость ленты
+#define LED_PIN 2                 // пин ленты
+#define LED_NUM 25                // количество светодиодов
+#define MAX_BRIGHTNESS 150        // максимальная яркость ленты
 
 #include "FastLED.h"
 CRGB leds[LED_NUM];
-unsigned long paletteTimer;     // таймер показа эффектов
-int showPaletteInterval = 10;   // продолжительность показа выбранного эффекта (сек)
-byte currentPalette=0;          // текущая палитра
+unsigned long paletteTimer;       // таймер показа эффектов
 
+byte paletteMode = 1;             // режим включения эффектов
+byte currentPalette = 0;          // текущая палитра
+byte currentBasicPalette = 0;     // текущая основная палитра
+byte currentShortPalette = 5;     // текущая дополнительная палитра
+byte basicPaletteInterval = 10;   // продолжительность основных (1,2,3,4,5) эффектов (сек) 
+byte shortPaletteInterval = 5;    // продолжительность дополнительных (6,7,8,9) эффектов (сек)
+
+byte favoritePalette[] = {0,1,2,3,4,5,6,7,8}; // список избранных эффектов
+                                              // дублирование эффекта в списке, увеличивает частоту его появления
 // матрица 11х4 сверху вниз
 byte glossMatrix[][4] = {
   {2,22,22,22},
@@ -56,43 +82,90 @@ void setup() {
 
 void loop() {
 
-if (millis() >= paletteTimer + showPaletteInterval * 500) {
- currentPalette++;
- if (currentPalette >8) currentPalette = 0; 
- paletteTimer = millis(); 
+switch (paletteMode) { // реализация режимов свечения
+//switch (7) {  
+  case 0:  // по порядку из списка избранных эфектов
+if (currentPalette > 4 & millis() >= paletteTimer + shortPaletteInterval * 1000) {
+  currentPalette=random(sizeof(favoritePalette)-4);
+  paletteTimer = millis(); 
+ } 
+  else { 
+  if (millis() >= paletteTimer + basicPaletteInterval * 1000) {
+  currentPalette=random(5, sizeof(favoritePalette));
+  paletteTimer = millis(); 
+  }
 }
+    break;
+ 
+  
+  case 1:  // случайно из списка избранных эффектов
+if (currentPalette > 4 & millis() >= paletteTimer + shortPaletteInterval * 1000) {
+  currentPalette=random(sizeof(favoritePalette)-4);
+  paletteTimer = millis(); 
+ } 
+  else { 
+  if (millis() >= paletteTimer + basicPaletteInterval * 1000) {
+  currentPalette=random(5, sizeof(favoritePalette));
+  paletteTimer = millis(); 
+  }
+}
+    break;
 
-switch (currentPalette) {  
+  
+  case 2:  // по порядку, чередуя основной эффект с дополнительным
 
-//switch (1) {  
+    break;
+  
+  
+  case 3:  // в случайном порядке, чередуя основной эффект с дополнительным
+if (currentPalette > 4 & millis() >= paletteTimer + shortPaletteInterval * 1000) {
+  currentBasicPalette++;
+   if (currentBasicPalette >4) currentBasicPalette = 0; 
+      currentPalette=currentBasicPalette;
+  paletteTimer = millis(); 
+ } 
+  else { 
+  if (millis() >= paletteTimer + basicPaletteInterval * 1000) {
+    currentShortPalette++;
+    if (currentShortPalette >8) currentShortPalette = 5; 
+  currentPalette=currentShortPalette;
+  paletteTimer = millis(); 
+  }
+}
+    break;
+ }
+
+
+switch (currentPalette) {
+//switch (7) {  
   case 0:
-  sparks();
+  sparks();         // Искры
     break;
   case 1:
-  breathe();
+  breathe();        // Дыхание
     break;
   case 2:
-   gloss();
+   gloss();         // Блеск
     break;
   case 3:
-  heartBeat();
+  heartBeat();      // Сердцебиение
     break;
   case 4:
-  sparkle();
+  sparkle();        // Свечение с искрами
     break;
   case 5:  
-  runningDots();
+  runningDots();    // Бегущие точки
     break;
   case 6:  
-  waterfall();  
+  waterfall();      // Водопад
     break;
   case 7:  
-  snake();
+  snake();          // Змейка
     break;
   case 8:  
-  flashingRays();
+  flashingRays();   // Мигающие лучи
     break;
-}
+ }
 }
 
 // ============================= ЭФФЕКТЫ ==============================
@@ -115,10 +188,10 @@ int q;
   for (int i = 0; i < LED_NUM; i++) {
     leds[i].setHSV(255, 255, q);
   }
- // leds[random(LED_NUM)].setHSV(255, 255, 255);   // искры
- FastLED.show();
+  // leds[random(LED_NUM)].setHSV(255, 255, 255);   // искры
+  FastLED.show();
   delay(7);       // скорость дыхания
-}
+ }
 }
 
 void gloss(){         // ------------------------ Блеск ----------------- 
@@ -129,14 +202,14 @@ void gloss(){         // ------------------------ Блеск -----------------
     leds[g].setHSV(255, 255, 155);
   } 
     for (int j = 0;  j < 4; j++) {
-    leds[glossMatrix2[i][j]].setHSV(255, 255, 255);
+    leds[glossMatrix2[i][j]].setHSV(255, 255, 255); // порядок влючения точек из матрицы
   }
   FastLED.show();
   delay(30);
  }
   leds[glossMatrix2[10][0]].setHSV(255, 255, 155);
   FastLED.show();
-  delay(1000+random(20)*100); // рандомно блеск от 1 до 3 сек
+  delay(1000+random(21)*100); // рандомно блеск от 1 до 3 сек
 }
 
 void heartBeat(){     // ------------------------ Сердцебиение -----------------
@@ -152,7 +225,7 @@ int q;
   delay(2);      // скорость яркой вспышки 
   else
    delay(14);    // скорость затухания
-}
+ }
 }
 
 void sparkle(){       // ------------------------ Свечение с искрами -----------------
@@ -162,7 +235,7 @@ int background_brightness = 100; // яркость фона
   }
  leds[random(LED_NUM)].setHSV(255, 255, 255);   // искры
  FastLED.show();
-  delay(10);
+ delay(10);
 }
 
 void runningDots(){   // ------------------------ Бегущие точки -----------------
@@ -174,16 +247,15 @@ void runningDots(){   // ------------------------ Бегущие точки ----
    leds[LED_NUM-i-1].setHue(255);
   FastLED.show();
   delay(30);        // время свечения точек
-  }
+ }
 }
 
 void waterfall(){     // ------------------------ Водопад ----------------- 
   for (int i = 0;  i < 11; i++) {
   FastLED.clear();
   FastLED.show();
-    
-    for (int j = 0;  j < 4; j++) {
-    leds[glossMatrix[10 - i][j]].setHue(255);
+   for (int j = 0;  j < 4; j++) {
+    leds[glossMatrix[10 - i][j]].setHue(255); // порядок влючения точек из матрицы
   }
   FastLED.show();
   delay(50);
@@ -191,12 +263,12 @@ void waterfall(){     // ------------------------ Водопад ---------------
 }
 
 void snake(){         // ------------------------ Змейка -----------------
-    for (int j = 0;  j < 25; j++) {
+for (int j = 0;  j < LED_NUM; j++) {
   for (int i = 0; i < LED_NUM; i++) {
-    leds[i].setHSV(255, 255, (i-j+50) * 10);
+   leds[i].setHSV(255, 255, (i-j)*255/LED_NUM);
   }
   FastLED.show();
-  delay(50);  // скорость змейки
+  delay(40);  // скорость змейки
  } 
 }
 
@@ -207,10 +279,8 @@ int vals[] = {0, 10, 20, 5, 15}; // порядок переключения лу
   for (int val : vals) {
   FastLED.clear();
   FastLED.show();
-
   for (int i = 10; i < 512; i+=3) {
     if (i > 255) q=511-i; else q=i;
-
   for (int j = 0; j < 5; j++) {
     leds[val+j].setHSV(255, 255, q);
   }
