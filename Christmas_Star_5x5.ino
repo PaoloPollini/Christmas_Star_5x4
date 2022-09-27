@@ -34,14 +34,15 @@ Last Updated: Sep 27 2022
 CRGB leds[LED_NUM];
 unsigned long paletteTimer;       // таймер показа эффектов
 
-byte paletteMode = 1;             // режим включения эффектов
+byte counter = 0;                 // счетчик
+byte paletteMode = 3;             // режим включения эффектов
 byte currentPalette = 0;          // текущая палитра
 byte currentBasicPalette = 0;     // текущая основная палитра
 byte currentShortPalette = 5;     // текущая дополнительная палитра
 byte basicPaletteInterval = 10;   // продолжительность основных (1,2,3,4,5) эффектов (сек) 
 byte shortPaletteInterval = 5;    // продолжительность дополнительных (6,7,8,9) эффектов (сек)
 
-byte favoritePalette[] = {0,1,2,3,4,5,6,7,8}; // список избранных эффектов
+byte favoritePalette[] = {1,6,7,8}; // список избранных эффектов
                                               // дублирование эффекта в списке, увеличивает частоту его появления
 // матрица 11х4 сверху вниз
 byte glossMatrix[][4] = {
@@ -74,6 +75,7 @@ byte glossMatrix2[][4] = {
 };
 
 void setup() {
+  Serial.begin(9600);
   FastLED.addLeds<WS2812, LED_PIN, GRB>(leds, LED_NUM);
   FastLED.setBrightness(MAX_BRIGHTNESS);
   randomSeed(analogRead(0));
@@ -83,45 +85,52 @@ void setup() {
 void loop() {
 
 switch (paletteMode) { // реализация режимов свечения
-//switch (7) {  
   case 0:  // по порядку из списка избранных эфектов
+  if (millis() < shortPaletteInterval * 1000)  currentPalette=favoritePalette[0];
 if (currentPalette > 4 & millis() >= paletteTimer + shortPaletteInterval * 1000) {
-  currentPalette=random(sizeof(favoritePalette)-4);
+   counter++;
+   if (counter > sizeof(favoritePalette)-1) counter = 0; 
+      currentPalette=favoritePalette[counter];
+          Serial.println(sizeof(favoritePalette));
+          Serial.println(currentPalette); 
   paletteTimer = millis(); 
  } 
   else { 
   if (millis() >= paletteTimer + basicPaletteInterval * 1000) {
-  currentPalette=random(5, sizeof(favoritePalette));
+   counter++;
+   if (counter > sizeof(favoritePalette)-1) counter = 0; 
+      currentPalette=favoritePalette[counter]; 
+          Serial.println(sizeof(favoritePalette));
+          Serial.println(currentPalette); 
+  paletteTimer = millis(); 
+  }
+}
+    break;
+  
+  case 1:  // случайно из списка избранных эффектов
+  if (millis() < shortPaletteInterval * 1000)  currentPalette=favoritePalette[random(sizeof(favoritePalette))];
+if (currentPalette > 4 & millis() >= paletteTimer + shortPaletteInterval * 1000) {
+  currentPalette=favoritePalette[random(sizeof(favoritePalette))];
+            Serial.println(sizeof(favoritePalette));
+          Serial.println(currentPalette); 
+  paletteTimer = millis(); 
+ } 
+  else { 
+  if (millis() >= paletteTimer + basicPaletteInterval * 1000) {
+  currentPalette=favoritePalette[random(sizeof(favoritePalette))];
+            Serial.println(sizeof(favoritePalette));
+          Serial.println(currentPalette); 
   paletteTimer = millis(); 
   }
 }
     break;
  
-  
-  case 1:  // случайно из списка избранных эффектов
-if (currentPalette > 4 & millis() >= paletteTimer + shortPaletteInterval * 1000) {
-  currentPalette=random(sizeof(favoritePalette)-4);
-  paletteTimer = millis(); 
- } 
-  else { 
-  if (millis() >= paletteTimer + basicPaletteInterval * 1000) {
-  currentPalette=random(5, sizeof(favoritePalette));
-  paletteTimer = millis(); 
-  }
-}
-    break;
-
-  
   case 2:  // по порядку, чередуя основной эффект с дополнительным
-
-    break;
-  
-  
-  case 3:  // в случайном порядке, чередуя основной эффект с дополнительным
 if (currentPalette > 4 & millis() >= paletteTimer + shortPaletteInterval * 1000) {
   currentBasicPalette++;
    if (currentBasicPalette >4) currentBasicPalette = 0; 
       currentPalette=currentBasicPalette;
+          Serial.println(currentPalette); 
   paletteTimer = millis(); 
  } 
   else { 
@@ -129,6 +138,24 @@ if (currentPalette > 4 & millis() >= paletteTimer + shortPaletteInterval * 1000)
     currentShortPalette++;
     if (currentShortPalette >8) currentShortPalette = 5; 
   currentPalette=currentShortPalette;
+            Serial.println(currentPalette); 
+  paletteTimer = millis(); 
+  }
+}
+    break;
+  
+  
+  case 3:  // в случайном порядке, чередуя основной эффект с дополнительным
+  if (millis() < shortPaletteInterval * 1000)  currentPalette=random(9);
+if (currentPalette > 4 & millis() >= paletteTimer + shortPaletteInterval * 1000) {
+  currentPalette=random(9);
+          Serial.println(currentPalette); 
+  paletteTimer = millis(); 
+ } 
+  else { 
+  if (millis() >= paletteTimer + basicPaletteInterval * 1000) {
+  currentPalette=random(9);
+          Serial.println(currentPalette); 
   paletteTimer = millis(); 
   }
 }
@@ -136,7 +163,7 @@ if (currentPalette > 4 & millis() >= paletteTimer + shortPaletteInterval * 1000)
  }
 
 
-switch (currentPalette) {
+switch (currentPalette) { // выбор эффекта
 //switch (7) {  
   case 0:
   sparks();         // Искры
