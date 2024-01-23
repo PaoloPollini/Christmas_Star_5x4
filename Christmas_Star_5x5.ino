@@ -1,10 +1,10 @@
 /*
   (c)saigon 2022
   Written: Sep 12 2022.
-  Last Updated: Sep 28 2022
+  Last Updated: Jan 23 2024
   GitHub: https://github.com/PaoloPollini/Christmas_Star_5x5
 
-  Звезда для новогодней елки на WS2812 v1.0
+  Звезда для новогодней елки на WS2812 v1.1
   Пять лучей по 5 светодиодов в каждом
   Девять эффектов в двух группах, пять основных и четыре дополнительных
   Четыре режима включения эффектов:
@@ -13,6 +13,7 @@
   2- по порядку, чередуя основной эффект с дополнительным
   3- в случайном порядке, чередуя основной эффект с дополнительным
   Время свечения основных и дополнителльных эффектов устанавливается отдельно
+  Заполнение звезды постоянным фоновым свечением
   Перечень эффектов:
   основные:
   0 - Искры
@@ -38,10 +39,11 @@
 #define LED_NUM 25                // количество светодиодов
 #define MAX_BRIGHTNESS 150        // максимальная яркость ленты
 #define PALETTE_MODE 2            // режим включения эффектов (0-3)
+#define BACKGR_BR     30          // яркость фонового свечения звезды (от 20 до 50) 0 - фон выключен
 long basicPaletteInterval = 60;   // продолжительность основных (1,2,3,4,5) эффектов (сек) 
-long shortPaletteInterval = 20;   // продолжительность дополнительных (6,7,8,9) эффектов (сек)
+long shortPaletteInterval = 30;   // продолжительность дополнительных (6,7,8,9) эффектов (сек)
 
-#include "FastLED.h"
+#include "FastLED.h"              // v3.4.0
 CRGB leds[LED_NUM];
 
 byte counter = 0;                 // счетчик
@@ -94,7 +96,7 @@ void setup() {
 
 void loop() {
   DEBUG(currentPalette);
-
+  
 // реализация режимов свечения
 #if (PALETTE_MODE == 0) // по порядку из списка избранных эфектов
  if (millis() < shortPaletteInterval * 1000 & paletteTimer == 0) { // выполняем один раз при старте
@@ -188,22 +190,28 @@ void loop() {
     case 7:  snake();         break;  // Змейка
     case 8:  flashingRays();  break;  // Мигающие лучи
   }
+} // end loop
+
+void fillBackground() { // функция заполняет звезду фоном с яркостью BACKGR_BR
+  for (int i = 0; i < LED_NUM; i++) { 
+    leds[i].setHSV(255, 255, BACKGR_BR);
+    }
 }
 
 // ============================= ЭФФЕКТЫ ==============================
 
 void sparks() {       // ------------------------ Искры -----------------
-  FastLED.clear();
+  fillBackground();
   FastLED.show();
   delay(100);        // Время паузы
   leds[random(LED_NUM)].setHue(255); // две искры одновременно рандомно
   leds[random(LED_NUM)].setHue(255);
   FastLED.show();
-  delay(25);        // Время вспышки
+  delay(20);        // Время вспышки
 }
 
 void breathe() {      // ------------------------ Дыхание -----------------
-  int min_brightness = 80; // минимальная яркость (ниже 10 - некрасиво мерцает)
+  int min_brightness = 30; // минимальная яркость (ниже 10 - некрасиво мерцает)
   int q;
   for (int j = min_brightness; j < 512 - min_brightness; j++) {
     if (j > 255) q = 511 - j; else q = j;
@@ -235,7 +243,7 @@ void gloss() {        // ------------------------ Блеск -----------------
 }
 
 void heartBeat() {    // ------------------------ Сердцебиение -----------------
-  int min_brightness = 60; // минимальная яркость (ниже 10 - некрасиво мерцает)
+  int min_brightness = 50; // минимальная яркость (ниже 10 - некрасиво мерцает)
   int q;
   for (int j = min_brightness; j < 512 - min_brightness; j += 2) {
     if (j > 255) q = 511 - j; else q = j;
@@ -262,9 +270,7 @@ void sparkle() {      // ------------------------ Свечение с искра
 
 void runningDots() {  // ------------------------ Бегущие точки -----------------
   for (int i = 0; i < LED_NUM; i++) {
-    FastLED.clear();
-    FastLED.show();
-
+    fillBackground();
     leds[i].setHue(255);
     leds[LED_NUM - i - 1].setHue(255);
     FastLED.show();
@@ -274,8 +280,7 @@ void runningDots() {  // ------------------------ Бегущие точки ----
 
 void waterfall() {    // ------------------------ Водопад -----------------
   for (int i = 0;  i < 11; i++) {
-    FastLED.clear();
-    FastLED.show();
+    fillBackground();
     for (int j = 0;  j < 4; j++) {
       leds[glossMatrix[10 - i][j]].setHue(255); // порядок влючения точек из матрицы
     }
@@ -297,10 +302,9 @@ void snake() {        // ------------------------ Змейка -----------------
 void flashingRays() { // ------------------------ Мигающие лучи -----------------
   int q;
   int vals[] = {0, 10, 20, 5, 15}; // порядок переключения лучей
-
+  
   for (int val : vals) {
-    FastLED.clear();
-    FastLED.show();
+    fillBackground();
     for (int i = 10; i < 512; i += 3) {
       if (i > 255) q = 511 - i; else q = i;
       for (int j = 0; j < 5; j++) {
